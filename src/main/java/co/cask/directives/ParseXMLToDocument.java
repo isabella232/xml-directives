@@ -48,12 +48,15 @@ import javax.xml.parsers.ParserConfigurationException;
  *
  * XPath comes with powerful expressions that can be used to parse
  * an xml document and retrieve relevant information.
+ *
+ * This directive <code>ParseXMLToDocument</code> converts an XML
+ * string into a XML Document.
  */
 @Plugin(type = Directive.Type)
-@Name(ParseAsXMLDocument.DIRECTIVE_NAME)
-@Description(ParseAsXMLDocument.DIRECTIVE_DESC)
-public final class ParseAsXMLDocument implements Directive {
-  public static final String DIRECTIVE_NAME = "parse-as-xml-doc";
+@Name(ParseXMLToDocument.DIRECTIVE_NAME)
+@Description(ParseXMLToDocument.DIRECTIVE_DESC)
+public final class ParseXMLToDocument implements Directive {
+  public static final String DIRECTIVE_NAME = "parse-xml-to-document";
   public static final String DIRECTIVE_DESC = "Parses XML into XML Document.";
   private String column;
   private DocumentBuilder builder;
