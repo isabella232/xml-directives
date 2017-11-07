@@ -90,6 +90,8 @@ public final class XPathExtractor implements Directive {
     source = ((ColumnName) arguments.value("source")).value();
     target = ((ColumnName) arguments.value("target")).value();
     DocumentBuilderFactory builderFactory =  DocumentBuilderFactory.newInstance();
+    builderFactory.setNamespaceAware(true);
+    builderFactory.setIgnoringComments(true);
     try {
       builder = builderFactory.newDocumentBuilder();
     } catch (ParserConfigurationException e) {
@@ -116,6 +118,9 @@ public final class XPathExtractor implements Directive {
         } else if (object instanceof String) {
           String value = (String) object;
           try {
+            if (value.charAt(value.length() - 1) == '\u0000') {
+              value = value.substring(0, value.length() - 1);
+            }
             Document xmlDocument = builder.parse(new ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8)));
             try {
               row.addOrSet(target, xPathExpression.evaluate(xmlDocument));

@@ -40,7 +40,7 @@ public class XPathExtractorTest {
     "\t\t<age>41</age>\n" +
     "\t\t<email>mycroft@sh.com</email>\n" +
     "\t</Employee>\n" +
-    "</Employees>";
+    "</Employees>\n";
 
   @Test
   public void testBasicXMLToDocument() throws Exception {

@@ -72,6 +72,8 @@ public final class ParseXMLToDocument implements Directive {
   public void initialize(Arguments arguments) throws DirectiveParseException {
     column = ((ColumnName) arguments.value("column")).value();
     DocumentBuilderFactory builderFactory =  DocumentBuilderFactory.newInstance();
+    builderFactory.setNamespaceAware(true);
+    builderFactory.setIgnoringComments(true);
     try {
       builder = builderFactory.newDocumentBuilder();
     } catch (ParserConfigurationException e) {
@@ -100,6 +102,9 @@ public final class ParseXMLToDocument implements Directive {
         }
         if (value != null) {
           try {
+            if (value.charAt(value.length() - 1) == '\u0000') {
+              value = value.substring(0, value.length() - 1);
+            }
             Document xmlDocument = builder.parse(new ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8)));
             row.addOrSet(column, xmlDocument);
           } catch (SAXException | IOException e) {
