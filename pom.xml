@@ -7,7 +7,7 @@
   <groupId>co.cask.wrangler</groupId>
   <artifactId>xml-directives</artifactId>
   <name>A collection of XML directives for dataprep.</name>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
   <packaging>jar</packaging>
 
   <properties>
