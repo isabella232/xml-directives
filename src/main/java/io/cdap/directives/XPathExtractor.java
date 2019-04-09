@@ -1,5 +1,5 @@
 /*
- *  Copyright © 2017 Cask Data, Inc.
+ *  Copyright © 2019 CDAP
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
  *  use this file except in compliance with the License. You may obtain a copy of
@@ -14,21 +14,22 @@
  *  the License.
  */
 
-package co.cask.directives;
+package io.cdap.directives;
 
-import co.cask.cdap.api.annotation.Description;
-import co.cask.cdap.api.annotation.Name;
-import co.cask.cdap.api.annotation.Plugin;
-import co.cask.wrangler.api.Arguments;
-import co.cask.wrangler.api.Directive;
-import co.cask.wrangler.api.DirectiveExecutionException;
-import co.cask.wrangler.api.DirectiveParseException;
-import co.cask.wrangler.api.ErrorRowException;
-import co.cask.wrangler.api.ExecutorContext;
-import co.cask.wrangler.api.Row;
-import co.cask.wrangler.api.parser.ColumnName;
-import co.cask.wrangler.api.parser.TokenType;
-import co.cask.wrangler.api.parser.UsageDefinition;
+import io.cdap.cdap.api.annotation.Description;
+import io.cdap.cdap.api.annotation.Name;
+import io.cdap.cdap.api.annotation.Plugin;
+import io.cdap.wrangler.api.Arguments;
+import io.cdap.wrangler.api.Directive;
+import io.cdap.wrangler.api.DirectiveExecutionException;
+import io.cdap.wrangler.api.DirectiveParseException;
+import io.cdap.wrangler.api.ErrorRowException;
+import io.cdap.wrangler.api.ExecutorContext;
+import io.cdap.wrangler.api.Row;
+import io.cdap.wrangler.api.parser.ColumnName;
+import io.cdap.wrangler.api.parser.Text;
+import io.cdap.wrangler.api.parser.TokenType;
+import io.cdap.wrangler.api.parser.UsageDefinition;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -39,6 +40,10 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 /**
  * XPath is a language for finding information in an XML file.
@@ -48,29 +53,42 @@ import javax.xml.parsers.ParserConfigurationException;
  *
  * XPath comes with powerful expressions that can be used to parse
  * an xml document and retrieve relevant information.
- *
- * This directive <code>ParseXMLToDocument</code> converts an XML
- * string into a XML Document.
  */
-@Plugin(type = Directive.Type)
-@Name(ParseXMLToDocument.DIRECTIVE_NAME)
-@Description(ParseXMLToDocument.DIRECTIVE_DESC)
-public final class ParseXMLToDocument implements Directive {
-  public static final String DIRECTIVE_NAME = "parse-xml-to-document";
-  public static final String DIRECTIVE_DESC = "Parses XML into XML Document.";
-  private String column;
+@Plugin(type = Directive.TYPE)
+@Name(XPathExtractor.DIRECTIVE_NAME)
+@Description(XPathExtractor.DIRECTIVE_DESC)
+public final class XPathExtractor implements Directive {
+  public static final String DIRECTIVE_NAME = "extract-xpath";
+  public static final String DIRECTIVE_DESC = "Extracts XPath from XML Document.";
+  private String xpath;
+  private String source;
+  private String target;
+  private XPath xPath;
+  private XPathExpression xPathExpression;
   private DocumentBuilder builder;
 
   @Override
   public UsageDefinition define() {
     UsageDefinition.Builder builder = UsageDefinition.builder(DIRECTIVE_NAME);
-    builder.define("column", TokenType.COLUMN_NAME);
+    builder.define("xpath", TokenType.TEXT);
+    builder.define("source", TokenType.COLUMN_NAME);
+    builder.define("target", TokenType.COLUMN_NAME);
     return builder.build();
   }
 
   @Override
   public void initialize(Arguments arguments) throws DirectiveParseException {
-    column = ((ColumnName) arguments.value("column")).value();
+    xPath = XPathFactory.newInstance().newXPath();
+    xpath = ((Text) arguments.value("xpath")).value();
+    try {
+      xPathExpression = xPath.compile(xpath);
+    } catch (XPathExpressionException e) {
+      throw new DirectiveParseException(
+        String.format("XPath '%s' is not valid xpath expression. %s", xpath, e.getMessage())
+      );
+    }
+    source = ((ColumnName) arguments.value("source")).value();
+    target = ((ColumnName) arguments.value("target")).value();
     DocumentBuilderFactory builderFactory =  DocumentBuilderFactory.newInstance();
     builderFactory.setNamespaceAware(true);
     builderFactory.setIgnoringComments(true);
@@ -87,29 +105,31 @@ public final class ParseXMLToDocument implements Directive {
   public List<Row> execute(List<Row> rows, ExecutorContext context)
     throws DirectiveExecutionException, ErrorRowException {
     for (Row row : rows) {
-      int idx = row.find(column);
+      int idx = row.find(source);
       if (idx != -1) {
         Object object = row.getValue(idx);
-        String value = null;
-        if (object instanceof String) {
-          value = (String) object;
-        } else if (object instanceof byte[]) {
-          value = new String((byte[]) object, StandardCharsets.UTF_8);
-        } else {
-          throw new DirectiveExecutionException(
-            String.format("Unknown type to be converted to XML Document. Should be of type string or byte array.")
-          );
-        }
-        if (value != null) {
+        if (object instanceof Document) {
+          Document value = (Document) object;
+          try {
+            row.addOrSet(target, xPathExpression.evaluate(value));
+          } catch (XPathExpressionException e) {
+            // Nothing to be done here.
+          }
+        } else if (object instanceof String) {
+          String value = (String) object;
           try {
             if (value.charAt(value.length() - 1) == '\u0000') {
               value = value.substring(0, value.length() - 1);
             }
             Document xmlDocument = builder.parse(new ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8)));
-            row.addOrSet(column, xmlDocument);
+            try {
+              row.addOrSet(target, xPathExpression.evaluate(xmlDocument));
+            } catch (XPathExpressionException e) {
+              // Nothing to be done here.
+            }
           } catch (SAXException | IOException e) {
             throw new DirectiveExecutionException(
-              String.format("Unable to parse XML. %s", e.getMessage())
+              String.format("Unable to parse XML document.", e.getMessage())
             );
           }
         }
