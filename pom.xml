@@ -14,6 +14,7 @@
     <cdap.version>6.0.0-SNAPSHOT</cdap.version>
     <wrangler.version>4.0.0</wrangler.version>
     <commons.codec.version>1.10</commons.codec.version>
+    <vtd.xml.version>2.13.4</vtd.xml.version>
     <junit.version>4.12</junit.version>
   </properties>
 
@@ -52,6 +53,11 @@
     </dependency>
 
     <!-- External Dependencies -->
+    <dependency>
+      <groupId>com.ximpleware</groupId>
+      <artifactId>vtd-xml</artifactId>
+      <version>${vtd.xml.version}</version>
+    </dependency>
 
     <!-- Testing Dependencies -->
     <dependency>
