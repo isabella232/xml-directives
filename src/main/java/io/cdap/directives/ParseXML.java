@@ -41,24 +41,24 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 /**
- * XPath is a language for finding information in an XML file.
- * You can say that XPath is (sort of) SQL for XML files. XPath
+ * XPathExp is a language for finding information in an XML file.
+ * You can say that XPathExp is (sort of) SQL for XML files. XPathExp
  * is used to navigate through elements and attributes in an XML
  * document.
  *
- * XPath comes with powerful expressions that can be used to parse
+ * XPathExp comes with powerful expressions that can be used to parse
  * an xml document and retrieve relevant information.
  *
- * This directive <code>ParseXMLToDocument</code> converts an XML
+ * This directive <code>ParseXML</code> converts an XML
  * string into a XML Document.
  */
 @Plugin(type = Directive.TYPE)
-@Name(ParseXMLToDocument.DIRECTIVE_NAME)
-@Description(ParseXMLToDocument.DIRECTIVE_DESC)
-public final class ParseXMLToDocument implements Directive {
-  public static final String DIRECTIVE_NAME = "parse-xml-to-document";
-  public static final String DIRECTIVE_DESC = "Parses XML into XML Document.";
-  private String column;
+@Name(ParseXML.DIRECTIVE_NAME)
+@Description(ParseXML.DIRECTIVE_DESC)
+public final class ParseXML implements Directive {
+  public static final String DIRECTIVE_NAME = "parse-as-xml";
+  public static final String DIRECTIVE_DESC = "Parses XML document";
+  private ColumnName column;
   private DocumentBuilder builder;
 
   @Override
@@ -70,12 +70,11 @@ public final class ParseXMLToDocument implements Directive {
 
   @Override
   public void initialize(Arguments arguments) throws DirectiveParseException {
-    column = ((ColumnName) arguments.value("column")).value();
-    DocumentBuilderFactory builderFactory =  DocumentBuilderFactory.newInstance();
-    builderFactory.setNamespaceAware(true);
-    builderFactory.setIgnoringComments(true);
+    column = arguments.value("column");
+    DocumentBuilderFactory documentFactory =  DocumentBuilderFactory.newInstance();
+    documentFactory.setNamespaceAware(true);
     try {
-      builder = builderFactory.newDocumentBuilder();
+      builder = documentFactory.newDocumentBuilder();
     } catch (ParserConfigurationException e) {
       throw new DirectiveParseException(
         String.format("Unable to create a XML document factory. %s", e.getMessage())
@@ -87,7 +86,7 @@ public final class ParseXMLToDocument implements Directive {
   public List<Row> execute(List<Row> rows, ExecutorContext context)
     throws DirectiveExecutionException, ErrorRowException {
     for (Row row : rows) {
-      int idx = row.find(column);
+      int idx = row.find(column.value());
       if (idx != -1) {
         Object object = row.getValue(idx);
         String value = null;
@@ -105,8 +104,10 @@ public final class ParseXMLToDocument implements Directive {
             if (value.charAt(value.length() - 1) == '\u0000') {
               value = value.substring(0, value.length() - 1);
             }
-            Document xmlDocument = builder.parse(new ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8)));
-            row.addOrSet(column, xmlDocument);
+            Document xmlDocument = builder.parse(
+              new ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8))
+            );
+            row.addOrSet(column.value(), xmlDocument);
           } catch (SAXException | IOException e) {
             throw new DirectiveExecutionException(
               String.format("Unable to parse XML. %s", e.getMessage())

@@ -11,10 +11,10 @@
   <packaging>jar</packaging>
 
   <properties>
-    <cdap.version>6.0.0-SNAPSHOT</cdap.version>
-    <wrangler.version>4.0.0</wrangler.version>
+    <cdap.version>6.1.0-SNAPSHOT</cdap.version>
+    <wrangler.version>4.1.0-SNAPSHOT</wrangler.version>
     <commons.codec.version>1.10</commons.codec.version>
-    <vtd.xml.version>2.13.4</vtd.xml.version>
+    <json.version>20180813</json.version>
     <junit.version>4.12</junit.version>
   </properties>
 
@@ -54,9 +54,9 @@
 
     <!-- External Dependencies -->
     <dependency>
-      <groupId>com.ximpleware</groupId>
-      <artifactId>vtd-xml</artifactId>
-      <version>${vtd.xml.version}</version>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>${json.version}</version>
     </dependency>
 
     <!-- Testing Dependencies -->
@@ -133,7 +133,8 @@
           <version>1.1.0</version>
           <configuration>
             <cdapArtifacts>
-              <parent>system:wrangler-transform[4.0.0-SNAPSHOT, 5.0.0-SNAPSHOT)</parent>
+              <parent>system:wrangler-transform[4.0.0, 5.0.0)</parent>
+              <parent>system:wrangler-service[4.0.0, 5.0.0)</parent>
             </cdapArtifacts>
           </configuration>
           <executions>
@@ -146,6 +147,14 @@
             </execution>
           </executions>
         </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>8</source>
+          <target>8</target>
+        </configuration>
+      </plugin>
 
     </plugins>
   </build>
