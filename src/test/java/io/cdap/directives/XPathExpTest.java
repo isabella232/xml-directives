@@ -153,20 +153,23 @@ public class XPathExpTest {
   @Test
   @Ignore
   public void testBasic() throws Exception {
-    TestRecipe recipe = new TestRecipe();
-    recipe.add("parse-as-xml :body");
-    recipe.add("xpath-exp :body '//:POSLog/:Transaction/:RetailTransaction/:LineItem[*]/:Sale/:POSIdentity' :sale");
-
+    List<Class<? extends Directive>> directives = new ArrayList<>();
     TestRows rows = new TestRows();
     rows.add(new Row("body", XML));
 
-    List<Class<? extends Directive>> directives = new ArrayList<>();
-    directives.add(XPathExp.class);
-    directives.add(ParseXML.class);
-    RecipePipeline pipeline = TestingRig.pipeline(directives, recipe);
-    List<Row> actuals = pipeline.execute(rows.toList());
-    directives.add(ParseXML.class);
-    Assert.assertTrue(1==1);
+    directives.add(XPathExpression.class);
+    directives.add(XMLParser.class);
+
+    TestRecipe recipe0 = new TestRecipe();
+    recipe0.add("parse-as-xml :body");
+    recipe0.add("xpath-exp :body '//:POSLog/:Transaction/:RetailTransaction/:LineItem[*]/:Sale' :sales");
+    recipe0.add("drop body");
+
+    RecipePipeline pipeline0 = TestingRig.pipeline(directives, recipe0);
+    List<Row> actuals0 = pipeline0.execute(rows.toList());
+
+    Assert.assertEquals(1, actuals0.size()); // Only one row
+    Assert.assertEquals(1, actuals0.get(0).length()); // Only one column
   }
 
 }

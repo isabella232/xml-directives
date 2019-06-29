@@ -1,17 +1,17 @@
 /*
- *  Copyright © 2019 CDAP
+ * Copyright © 2019 Cask Data, Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
- *  use this file except in compliance with the License. You may obtain a copy of
- *  the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- *  License for the specific language governing permissions and limitations under
- *  the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 
 package io.cdap.directives;
@@ -41,26 +41,30 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 /**
- * XPathExp is a language for finding information in an XML file.
- * You can say that XPathExp is (sort of) SQL for XML files. XPathExp
+ * XPathExpression is a language for finding information in an XML file.
+ * You can say that XPathExpression is (sort of) SQL for XML files. XPathExpression
  * is used to navigate through elements and attributes in an XML
  * document.
  *
- * XPathExp comes with powerful expressions that can be used to parse
+ * XPathExpression comes with powerful expressions that can be used to parse
  * an xml document and retrieve relevant information.
  *
- * This directive <code>ParseXML</code> converts an XML
+ * This directive <code>XMLParser</code> converts an XML
  * string into a XML Document.
  */
 @Plugin(type = Directive.TYPE)
-@Name(ParseXML.DIRECTIVE_NAME)
-@Description(ParseXML.DIRECTIVE_DESC)
-public final class ParseXML implements Directive {
+@Name(XMLParser.DIRECTIVE_NAME)
+@Description(XMLParser.DIRECTIVE_DESC)
+public final class XMLParser implements Directive {
   public static final String DIRECTIVE_NAME = "parse-as-xml";
-  public static final String DIRECTIVE_DESC = "Parses XML document";
+  public static final String DIRECTIVE_DESC = "Parses string XML into a XML document";
   private ColumnName column;
   private DocumentBuilder builder;
 
+  /**
+   *
+   * @return
+   */
   @Override
   public UsageDefinition define() {
     UsageDefinition.Builder builder = UsageDefinition.builder(DIRECTIVE_NAME);
@@ -68,6 +72,11 @@ public final class ParseXML implements Directive {
     return builder.build();
   }
 
+  /**
+   *
+   * @param arguments
+   * @throws DirectiveParseException
+   */
   @Override
   public void initialize(Arguments arguments) throws DirectiveParseException {
     column = arguments.value("column");
@@ -82,6 +91,14 @@ public final class ParseXML implements Directive {
     }
   }
 
+  /**
+   *
+   * @param rows
+   * @param context
+   * @return
+   * @throws DirectiveExecutionException
+   * @throws ErrorRowException
+   */
   @Override
   public List<Row> execute(List<Row> rows, ExecutorContext context)
     throws DirectiveExecutionException, ErrorRowException {
@@ -119,6 +136,9 @@ public final class ParseXML implements Directive {
     return rows;
   }
 
+  /**
+   *
+   */
   @Override
   public void destroy() {
     // nothing.

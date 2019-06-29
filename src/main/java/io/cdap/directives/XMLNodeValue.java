@@ -1,17 +1,17 @@
 /*
- *  Copyright © 2019 CDAP
+ * Copyright © 2019 Cask Data, Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
- *  use this file except in compliance with the License. You may obtain a copy of
- *  the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- *  License for the specific language governing permissions and limitations under
- *  the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 
 package io.cdap.directives;
@@ -36,16 +36,20 @@ import java.util.List;
 
 /**
  * XPathValue extractor extracts the value field from JSON object created by
- * XPathExp.
+ * XPathExpression.
  */
 @Plugin(type = Directive.TYPE)
-@Name(XMLValue.DIRECTIVE_NAME)
-@Description(XMLValue.DIRECTIVE_DESC)
-public final class XMLValue implements Directive {
-  public static final String DIRECTIVE_NAME = "xml-value";
-  public static final String DIRECTIVE_DESC = "Extracts value field from XML generated json.";
+@Name(XMLNodeValue.DIRECTIVE_NAME)
+@Description(XMLNodeValue.DIRECTIVE_DESC)
+public final class XMLNodeValue implements Directive {
+  public static final String DIRECTIVE_NAME = "xml-node-value";
+  public static final String DIRECTIVE_DESC = "Extracts node value from XML generated json";
   private ColumnNameList columns;
 
+  /**
+   *
+   * @return
+   */
   @Override
   public UsageDefinition define() {
     UsageDefinition.Builder builder = UsageDefinition.builder(DIRECTIVE_NAME);
@@ -53,11 +57,21 @@ public final class XMLValue implements Directive {
     return builder.build();
   }
 
+  /**
+   *
+   * @param arguments
+   * @throws DirectiveParseException
+   */
   @Override
   public void initialize(Arguments arguments) throws DirectiveParseException {
     columns = arguments.value("columns");
   }
 
+  /**
+   *
+   * @param column
+   * @param rows
+   */
   private void value(String column, List<Row> rows) {
     for (Row row : rows) {
       int idx = row.find(column);
@@ -74,6 +88,14 @@ public final class XMLValue implements Directive {
     }
   }
 
+  /**
+   *
+   * @param rows
+   * @param context
+   * @return
+   * @throws DirectiveExecutionException
+   * @throws ErrorRowException
+   */
   @Override
   public List<Row> execute(List<Row> rows, ExecutorContext context)
     throws DirectiveExecutionException, ErrorRowException {
@@ -83,6 +105,9 @@ public final class XMLValue implements Directive {
     return rows;
   }
 
+  /**
+   *
+   */
   @Override
   public void destroy() {
     // nothing.

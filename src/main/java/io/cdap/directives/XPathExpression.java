@@ -1,17 +1,17 @@
 /*
- *  Copyright © 2019 CDAP
+ * Copyright © 2019 Cask Data, Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may not
- *  use this file except in compliance with the License. You may obtain a copy of
- *  the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- *  License for the specific language governing permissions and limitations under
- *  the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 
 package io.cdap.directives;
@@ -53,22 +53,22 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import static io.cdap.directives.XPathExp.DIRECTIVE_NAME;
+import static io.cdap.directives.XPathExpression.DIRECTIVE_NAME;
 
 /**
- * XPathExp is a language for finding information in an XML file.
- * You can say that XPathExp is (sort of) SQL for XML files. XPathExp
+ * XPathExpression is a language for finding information in an XML file.
+ * You can say that XPathExpression is (sort of) SQL for XML files. XPathExpression
  * is used to navigate through elements and attributes in an XML
  * document.
  *
- * XPathExp comes with powerful expressions that can be used to parse
+ * XPathExpression comes with powerful expressions that can be used to parse
  * an xml document and retrieve relevant information.
  */
 @Plugin(type = Directive.TYPE)
 @Name(DIRECTIVE_NAME)
-@Description("Extracts XPath from XML document")
-public final class XPathExp implements Directive {
-  public static final String DIRECTIVE_NAME = "xpath-exp";
+@Description("Select nodes from XML document using XPath expression")
+public final class XPathExpression implements Directive {
+  public static final String DIRECTIVE_NAME = "xpath-expression";
   private static final String XSL_TO_JSON_RESOURCE = "xml2json.xsl";
   private Text xpath;
   private ColumnName source;
@@ -76,6 +76,10 @@ public final class XPathExp implements Directive {
   private XPath xPath;
   private Transformer transformer;
 
+  /**
+   *
+   * @return
+   */
   @Override
   public UsageDefinition define() {
     UsageDefinition.Builder builder = UsageDefinition.builder(DIRECTIVE_NAME);
@@ -85,6 +89,11 @@ public final class XPathExp implements Directive {
     return builder.build();
   }
 
+  /**
+   *
+   * @return
+   * @throws Exception
+   */
   private String readXSLFromResource() throws Exception {
     String content = null;
     try (InputStream is = getClass().getClassLoader().getResource(XSL_TO_JSON_RESOURCE).openStream()) {
@@ -102,6 +111,11 @@ public final class XPathExp implements Directive {
     return content;
   }
 
+  /**
+   *
+   * @param arguments
+   * @throws DirectiveParseException
+   */
   @Override
   public void initialize(Arguments arguments) throws DirectiveParseException {
     source = arguments.value("source");
@@ -125,6 +139,14 @@ public final class XPathExp implements Directive {
     }
   }
 
+  /**
+   *
+   * @param rows
+   * @param context
+   * @return
+   * @throws DirectiveExecutionException
+   * @throws ErrorRowException
+   */
   @Override
   public List<Row> execute(List<Row> rows, ExecutorContext context)
     throws DirectiveExecutionException, ErrorRowException {
@@ -136,12 +158,10 @@ public final class XPathExp implements Directive {
           Document value = (Document) object;
           try {
             xPath = XPathFactory.newInstance().newXPath();
-            xPath.setNamespaceContext(new NamespaceResolver(value, true));
+            xPath.setNamespaceContext(new XMLNamespaceResolver(value, true));
             NodeList results = (NodeList) xPath.evaluate(xpath.value(), value, XPathConstants.NODESET);
-            if (results.getLength() < 2) {
-              if (results.item(0) != null) {
-                row.addOrSet(target.value(), results.item(0).getNextSibling().getNodeValue());
-              }
+            if (results.getLength() < 2 && results.item(0) != null) {
+              row.addOrSet(target.value(), results.item(0).getNextSibling().getNodeValue());
             } else {
               JsonArray array = new JsonArray();
               for (int i = 0; i < results.getLength(); ++i) {
@@ -169,6 +189,9 @@ public final class XPathExp implements Directive {
     return rows;
   }
 
+  /**
+   *
+   */
   @Override
   public void destroy() {
     // nothing.

@@ -1,3 +1,19 @@
+/*
+ * Copyright © 2019 Cask Data, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package io.cdap.directives;
 
 import org.w3c.dom.Attr;
@@ -12,12 +28,20 @@ import java.util.Map;
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 
-public class NamespaceResolver implements NamespaceContext {
+/**
+ *
+ */
+public class XMLNamespaceResolver implements NamespaceContext {
   private static final String DEFAULT_NS = "DEFAULT";
   private Map<String, String> prefix2Uri = new HashMap<String, String>();
   private Map<String, String> uri2Prefix = new HashMap<String, String>();
 
-  public NamespaceResolver(Document document, boolean toplevelOnly) {
+  /**
+   *
+   * @param document
+   * @param toplevelOnly
+   */
+  public XMLNamespaceResolver(Document document, boolean toplevelOnly) {
     String namespaceURI = document.getFirstChild().getNamespaceURI();
     if (namespaceURI != null) {
       putInCache(DEFAULT_NS, namespaceURI);
@@ -25,6 +49,11 @@ public class NamespaceResolver implements NamespaceContext {
     examineNode(document.getFirstChild(), toplevelOnly);
   }
 
+  /**
+   *
+   * @param prefix
+   * @return
+   */
   @Override
   public String getNamespaceURI(String prefix) {
     if (prefix == null || prefix.equals(XMLConstants.DEFAULT_NS_PREFIX)) {
@@ -34,16 +63,31 @@ public class NamespaceResolver implements NamespaceContext {
     }
   }
 
+  /**
+   *
+   * @param namespaceURI
+   * @return
+   */
   @Override
   public String getPrefix(String namespaceURI) {
     return uri2Prefix.get(namespaceURI);
   }
 
+  /**
+   *
+   * @param namespaceURI
+   * @return
+   */
   @Override
   public Iterator getPrefixes(String namespaceURI) {
     return null;
   }
 
+  /**
+   *
+   * @param node
+   * @param attributesOnly
+   */
   private void examineNode(Node node, boolean attributesOnly) {
     NamedNodeMap attributes = node.getAttributes();
     for (int i = 0; i < attributes.getLength(); i++) {
@@ -61,6 +105,10 @@ public class NamespaceResolver implements NamespaceContext {
     }
   }
 
+  /**
+   *
+   * @param attribute
+   */
   private void storeAttribute(Attr attribute) {
     // examine the attributes in namespace xmlns
     if (attribute.getNamespaceURI() != null
@@ -77,6 +125,11 @@ public class NamespaceResolver implements NamespaceContext {
 
   }
 
+  /**
+   *
+   * @param prefix
+   * @param uri
+   */
   private void putInCache(String prefix, String uri) {
     prefix2Uri.put(prefix, uri);
     uri2Prefix.put(uri, prefix);
